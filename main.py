@@ -32,25 +32,26 @@ versionnumber = "1.0"
 myapikey = open(sys.path[0]+"/apikey.txt").read() # retrieve API key from apikey.txt
 url = "https://www.reddit.com/r/dankmemes/top.json?sort=top&t=week"
 groupid = sys.argv[1]
+debug = False
 
 
 def main():
-	print "Group Meme Bot v" + versionnumber
+	if debug: print "Group Meme Bot v" + versionnumber
 
 	redditJson = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}).json()
 	topMemeUrl = str(redditJson['data']['children'][0]['data']['url'])
-	print "Original URL: " + topMemeUrl
+	if debug: print "Original URL: " + topMemeUrl
 
 	topMemeRequest = requests.get(topMemeUrl)
 
 	groupMeImageJson = requests.post("https://image.groupme.com/pictures",  data=topMemeRequest.content, headers={"X-Access-Token": myapikey}).json()
 	groupMeImageUrl = str(groupMeImageJson['payload']['url'])
-	print "GroupMe URL: " + groupMeImageUrl
+	if debug: print "GroupMe URL: " + groupMeImageUrl
 
 	groupMeGroupUpdate = requests.post("https://api.groupme.com/v3/groups/"+groupid+"/update?token="+myapikey, data=json.dumps({"image_url": groupMeImageUrl}))
-	print "Group avater update status code: " + str(groupMeGroupUpdate.status_code)
+	if debug: print "Group avater update status code: " + str(groupMeGroupUpdate.status_code)
 	if groupMeGroupUpdate.status_code != requests.codes.ok:
-		print groupMeGroupUpdate.json()
+		if debug: print groupMeGroupUpdate.json()
 
 # This is the standard boilerplate that calls the main() function.
 if __name__ == '__main__':
