@@ -30,7 +30,7 @@ import sys       #for script arguments
 
 versionnumber = "1.0"
 myapikey = open(sys.path[0]+"/apikey.txt").read() # retrieve API key from apikey.txt
-url = "https://www.reddit.com/r/dankmemes/top.json?sort=top&t=week"
+url = "https://www.reddit.com/r/dank_meme/top.json?sort=top&t=week"
 groupid = sys.argv[1]
 debug = False
 
