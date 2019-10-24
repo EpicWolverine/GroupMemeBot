@@ -1,5 +1,5 @@
-#!/usr/bin/python -tt
-# Copyright 2017 Brendan Ferracciolo
+#!/usr/bin/env python3
+# Copyright 2019 Brendan Ferracciolo
 # 
 # This file is part of Group Meme Bot.
 #
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Group Meme Bot. If not, see <http://www.gnu.org/licenses/>.
 
-"""Group Meme Bot v1.0
+"""Group Meme Bot v2.0
 https://github.com/EpicWolverine/GroupMemeBot
 
 --- License ---
@@ -26,33 +26,60 @@ Licence tl;dr: http://www.tldrlegal.com/license/gnu-general-public-license-v3-(g
 
 import json
 import requests
-import sys       #for script arguments
+import sys
+import time
 
-versionnumber = "1.0"
-myapikey = open(sys.path[0]+"/apikey.txt").read() # retrieve API key from apikey.txt
-url = "https://www.reddit.com/r/dank_meme/top.json?sort=top&t=week"
-groupid = sys.argv[1]
-debug = False
+class GroupMemeBot:
+	def __init__(self):
+		self.version_number = "2.0"
+		self.my_api_key = open(f"{sys.path[0]}/apikey.txt").read()
+		self.top_reddit_posts_url = "https://www.reddit.com/r/{}/top.json?sort=top&t=week"
+		self.subreddits = open(f"{sys.path[0]}/subreddits.txt").read().split("\n")
+		self.group_id = sys.argv[1]
+		self.debug = False
 
+	def main(self):
+		if self.debug: print(f"Group Meme Bot v{self.version_number}")
 
-def main():
-	if debug: print "Group Meme Bot v" + versionnumber
+		self.format_url()
+		reddit_json = requests.get(self.top_reddit_posts_url, headers={'User-Agent': 'Mozilla/5.0'}).json()
+		top_meme_post = reddit_json['data']['children'][0]['data']
+		top_meme_url = str(top_meme_post['url'])
+		if self.debug: print(f"Original URL: {top_meme_url}")
 
-	redditJson = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}).json()
-	topMemeUrl = str(redditJson['data']['children'][0]['data']['url'])
-	if debug: print "Original URL: " + topMemeUrl
+		top_meme_request = requests.get(top_meme_url)
 
-	topMemeRequest = requests.get(topMemeUrl)
+		groupme_image_json = requests.post("https://image.groupme.com/pictures",  data=top_meme_request.content, headers={"X-Access-Token": self.my_api_key}).json()
+		groupme_image_url = str(groupme_image_json['payload']['url'])
+		if self.debug: print(f"GroupMe URL: {groupme_image_url}")
 
-	groupMeImageJson = requests.post("https://image.groupme.com/pictures",  data=topMemeRequest.content, headers={"X-Access-Token": myapikey}).json()
-	groupMeImageUrl = str(groupMeImageJson['payload']['url'])
-	if debug: print "GroupMe URL: " + groupMeImageUrl
+		groupme_group_update = requests.post(f"https://api.groupme.com/v3/groups/{self.group_id}/update?token={self.my_api_key}", data=json.dumps({"image_url": groupme_image_url}))
+		if self.debug: print(f"Group avatar update status code: {groupme_group_update.status_code}")
+		if groupme_group_update.status_code != requests.codes.ok:
+			if self.debug: print(groupme_group_update.json())
+		
+		if False: #disable message posting until I can finish debugging it
+			message = (
+				f"[GroupMemeBot] Group avatar changed to:\n"
+				f"{top_meme_post['title']}\n"
+				f"by {top_meme_post['author']} to /r/{top_meme_post['subreddit']}\n"
+				f"https://reddit.com{top_meme_post['permalink']}"
+			)
+			if self.debug: print(message)
+			groupme_send_post = requests.post(f"https://api.groupme.com/v3/groups/{self.group_id}/messages?token={self.my_api_key}", 
+												data=json.dumps({"message": {"source_guid": str(time.time_ns()), "text": "message", "attachments": [{"type": "image", "url": groupme_image_url}]}}))
+			if self.debug: print(f"Group message post status code: {groupme_send_post.status_code}")
+			if groupme_send_post.status_code != requests.codes.ok:
+				if self.debug: print(groupme_send_post.json())
 
-	groupMeGroupUpdate = requests.post("https://api.groupme.com/v3/groups/"+groupid+"/update?token="+myapikey, data=json.dumps({"image_url": groupMeImageUrl}))
-	if debug: print "Group avater update status code: " + str(groupMeGroupUpdate.status_code)
-	if groupMeGroupUpdate.status_code != requests.codes.ok:
-		if debug: print groupMeGroupUpdate.json()
+	def format_url(self):
+		self.subreddits = [sub for sub in self.subreddits if sub[0] != '#']
+		multireddit_string = self.subreddits[0]
+		for subreddit in self.subreddits[1:]:
+				multireddit_string += "+" + subreddit
+		self.top_reddit_posts_url = self.top_reddit_posts_url.format(multireddit_string)
 
 # This is the standard boilerplate that calls the main() function.
 if __name__ == '__main__':
-	main()
+	bot = GroupMemeBot()
+	bot.main()
