@@ -1,3 +1,7 @@
+# List of subreddits. One per line. No /r/. Begin a line with # for a comment.
+# The bot will pick the top post by points that has been submitted in the past week. 
+# This means bigger subs that get posts with more points will likely bury posts in other subs on ths list.
 #dankmemes
 dank_meme
 bonehurtingjuice
+MemeTemplatesOfficial
