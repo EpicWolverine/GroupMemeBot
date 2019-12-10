@@ -49,28 +49,28 @@ class GroupMemeBot:
 
 		top_meme_request = requests.get(top_meme_url)
 
-		groupme_image_json = requests.post("https://image.groupme.com/pictures",  data=top_meme_request.content, headers={"X-Access-Token": self.my_api_key}).json()
+		groupme_image_json = requests.post("https://image.groupme.com/pictures", headers={"X-Access-Token": self.my_api_key}, data=top_meme_request.content).json()
 		groupme_image_url = str(groupme_image_json['payload']['url'])
 		if self.debug: print(f"GroupMe URL: {groupme_image_url}")
 
-		groupme_group_update = requests.post(f"https://api.groupme.com/v3/groups/{self.group_id}/update?token={self.my_api_key}", data=json.dumps({"image_url": groupme_image_url}))
+		groupme_group_update = requests.post(f"https://api.groupme.com/v3/groups/{self.group_id}/update", headers={"X-Access-Token": self.my_api_key},
+											 json={"image_url": groupme_image_url})
 		if self.debug: print(f"Group avatar update status code: {groupme_group_update.status_code}")
 		if groupme_group_update.status_code != requests.codes.ok:
 			if self.debug: print(groupme_group_update.json())
 		
-		if False: #disable message posting until I can finish debugging it
-			message = (
-				f"[GroupMemeBot] Group avatar changed to:\n"
-				f"{top_meme_post['title']}\n"
-				f"by {top_meme_post['author']} to /r/{top_meme_post['subreddit']}\n"
-				f"https://reddit.com{top_meme_post['permalink']}"
-			)
-			if self.debug: print(message)
-			groupme_send_post = requests.post(f"https://api.groupme.com/v3/groups/{self.group_id}/messages?token={self.my_api_key}", 
-												data=json.dumps({"message": {"source_guid": str(time.time_ns()), "text": "message", "attachments": [{"type": "image", "url": groupme_image_url}]}}))
-			if self.debug: print(f"Group message post status code: {groupme_send_post.status_code}")
-			if groupme_send_post.status_code != requests.codes.ok:
-				if self.debug: print(groupme_send_post.json())
+		message = (
+			f"[Group Meme Bot] Group avatar changed to:\n"
+			f"{top_meme_post['title']}\n"
+			f"by {top_meme_post['author']} on /r/{top_meme_post['subreddit']}\n"
+			f"https://reddit.com{top_meme_post['permalink']}"
+		)
+		if self.debug: print(message)
+		groupme_send_post = requests.post(f"https://api.groupme.com/v3/groups/{self.group_id}/messages", headers={"X-Access-Token": self.my_api_key},
+										  json={"message": {"text": message, "attachments": [{"type": "image", "url": groupme_image_url}], "source_guid": str(time.time_ns())}})
+		if self.debug: print(f"Group message post status code: {groupme_send_post.status_code}")
+		if groupme_send_post.status_code != requests.codes.ok:
+			if self.debug: print(groupme_send_post.json())
 
 	def format_url(self):
 		self.subreddits = [sub for sub in self.subreddits if sub[0] != '#']
