@@ -35,6 +35,7 @@ class GroupMemeBot:
 		self.my_api_key = open(f"{sys.path[0]}/apikey.txt").read()
 		self.top_reddit_posts_url = "https://www.reddit.com/r/{}/top.json?sort=top&t=week"
 		self.subreddits = open(f"{sys.path[0]}/subreddits.txt").read().split("\n")
+		self.post_log_path = f"{sys.path[0]}/post_log.txt"
 		self.group_id = sys.argv[1]
 		self.debug = False
 
@@ -43,11 +44,17 @@ class GroupMemeBot:
 
 		self.format_url()
 		reddit_json = requests.get(self.top_reddit_posts_url, headers={'User-Agent': 'Mozilla/5.0'}).json()
-		top_meme_post = reddit_json['data']['children'][0]['data']
-		top_meme_url = str(top_meme_post['url'])
-		if self.debug: print(f"Original URL: {top_meme_url}")
+		top_meme_post = None
+		with open(self.post_log_path, 'r+') as post_log:
+			post_ids = post_log.read().split("\n")
+			for index in range(reddit_json['data']['dist']):
+				top_meme_post = reddit_json['data']['children'][index]['data']
+				if top_meme_post['id'] not in post_ids:
+					post_log.write(f"{top_meme_post['id']}\n")
+					break
 
-		top_meme_request = requests.get(top_meme_url)
+		if self.debug: print(f"Original URL: {top_meme_post['url']}")
+		top_meme_request = requests.get(top_meme_post['url'])
 
 		groupme_image_json = requests.post("https://image.groupme.com/pictures", headers={"X-Access-Token": self.my_api_key}, data=top_meme_request.content).json()
 		groupme_image_url = str(groupme_image_json['payload']['url'])

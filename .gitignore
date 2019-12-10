@@ -96,5 +96,7 @@ nosetests.xml
 # =========================
 # API Key
 apikey.txt
-# My list of group ids
+# My personal list of group ids
 group_ids.txt
+# Log of post IDs that have already been used
+post_log.txt
