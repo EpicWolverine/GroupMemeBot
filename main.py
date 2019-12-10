@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Group Meme Bot. If not, see <http://www.gnu.org/licenses/>.
 
-"""Group Meme Bot v2.0
+"""Group Meme Bot v2.1
 https://github.com/EpicWolverine/GroupMemeBot
 
 --- License ---
@@ -31,7 +31,7 @@ import time
 
 class GroupMemeBot:
 	def __init__(self):
-		self.version_number = "2.0"
+		self.version_number = "2.1"
 		self.my_api_key = open(f"{sys.path[0]}/apikey.txt").read()
 		self.top_reddit_posts_url = "https://www.reddit.com/r/{}/top.json?sort=top&t=week"
 		self.subreddits = open(f"{sys.path[0]}/subreddits.txt").read().split("\n")
