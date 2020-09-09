@@ -3,5 +3,6 @@
 # This means bigger subs that get posts with more points will likely bury posts in other subs on ths list.
 #dankmemes
 dank_meme
-bonehurtingjuice
+#bonehurtingjuice
 MemeTemplatesOfficial
+PoliticalCompassMemes
